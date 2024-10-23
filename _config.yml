@@ -45,6 +45,3 @@ version: 3.0.0
 nav:
   - title: tutorials
     url: /tutorials
-
-  - title: experiments
-    url: /experiments
