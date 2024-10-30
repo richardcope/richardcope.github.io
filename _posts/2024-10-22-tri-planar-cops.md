@@ -23,13 +23,3 @@ This tutorial assumes you’re reasonably familiar with cops but I’ll go over 
 
 Fill the wrangle with this vex snippet:
 
-{% highlight c++ linenos %}
-
-int prim;
-vector uv;
-xyzdist(1,v@P,prim,uv);
-
-v@origP = primuv(1,"origP",prim,uv);
-
-{% endhighlight %}
-
