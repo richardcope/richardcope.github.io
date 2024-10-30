@@ -19,11 +19,11 @@ A tri planar projection is a set of 3 parallel projections, front, side and top,
 
 This tutorial assumes you’re reasonably familiar with cops but I’ll go over a quick bit of set up. Create the following network and link or create your geometry in the sop import, uv’s and normals are required on the geometry. On the wrangle, change the type of the first input to Geometry, then add an RGB input and name it origP.
 
-![inital setup](/assets/images/2024-10-22-tri-planar-cops/set_up_screenshot001.JPG)
+![inital setup](/assets/images/2024-10-22-tri-planar-cops/set_up_screenshot001.jpg)
 
 Fill the wrangle with this vex snippet:
 
-{% highlight jc++ linenos %}
+{% highlight c++ linenos %}
 
 int prim;
 vector uv;
