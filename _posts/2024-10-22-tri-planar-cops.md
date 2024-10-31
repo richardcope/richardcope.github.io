@@ -23,3 +23,16 @@ This tutorial assumes you’re reasonably familiar with cops but I’ll go over 
 
 Fill the wrangle with this vex snippet:
 
+
+{% highlight c++ %}int prim;
+vector uv;
+xyzdist(1,v@P,prim,uv);
+
+v@origP = primuv(1,"origP",prim,uv);{% endhighlight %}
+
+This process just maps your position data to uv space so we can map 3D elements in cops. Using the xyzdist function does a great job of extrapolating the values at uv boundaries so we don’t have to worry about seams. *Falcón Saavedra
+
+Add an opencl node and in the signature tab set:
+
+- input1 to **origP**, type **RGB**
+- output1 to **Cdout**, type **RGB**
