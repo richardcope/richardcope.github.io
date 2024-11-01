@@ -30,7 +30,7 @@ xyzdist(1,v@P,prim,uv);
 
 v@origP = primuv(1,"origP",prim,uv);{% endhighlight %}
 
-This process just maps your position data to uv space so we can map 3D elements in cops. Using the xyzdist function does a great job of extrapolating the values at uv boundaries so we don’t have to worry about seams.[^1]
+This process just maps your position data to uv space so we can map 3D elements in cops. Using the xyzdist function does a great job of extrapolating the values at uv boundaries so we don’t have to worry about seams.[^fn-1]
 
 Add an opencl node and in the signature tab set:
 
@@ -69,4 +69,9 @@ We need to create projections for the xy, zy and zx planes, let’s start with x
 
 Now we’ve got our uv coordinates, we need to use them to sample a texture. Bind a new layer called tex with the same code as we used to bind origP then click the small icon above the text box to add the relevant inputs.
 
-We use textureSampleRect to sample our input texture and store this to a variable named proj_tex:
+We use textureSampleRect to sample our input texture and store this to a variable named proj_tex.
+
+{% highlight py %}float3 proj_tex = @tex.textureSampleRect(uv, @dPdxy);
+{% endhighlight %}
+
+The first parameter of this function is used to input the centre of the sample area, the second refers to the size of the sample area. @dPdxy is a default binding that returns the size of the current output buffer element in image space. We don’t need to worry too much about that, we just need it so our texture is sampled nicely. There’s further information in the SideFx documentation if you’re interested though.[^fn-2]
