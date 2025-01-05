@@ -91,7 +91,7 @@ float3 N, weight, col;
 
 {% endhighlight %}
 
-We want some way to control the falloff of the blending, one method for this is raising our facing ratio to a power.[^fn-footnote_01] To do this, bind a float parameter named exponent (feel free to give this a more intuitive label).
+We want some way to control the falloff of the blending, one method for this is raising our facing ratio to a power.[^fn-footnote_02] To do this, bind a float parameter named exponent (feel free to give this a more intuitive label).
 
 {% highlight text %}
 [^fn-footnote_02]: Testing footnotes
