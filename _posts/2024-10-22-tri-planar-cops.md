@@ -3,23 +3,23 @@ layout: post
 title: building a tri planar projection in cops (opencl)
 ---
 
-Tri planar projections are a useful tool for any texturing or lookdev artist, surprisingly there's no native tri planar in cops 2.0, as of houdini 20.5... But that means we have an opportunity to build our own from scratch. This could be done using vex or a large network of native cops nodes, but for processing speed opencl is our best bet.
+Tri planar projections are a useful tool for any texturing or lookdev artist. Since there’s no native tri planar in cops 2.0 (as of houdini 20.5), we have a good excuse to build our own. This could be done using vex or a large network of native cops nodes, however processing speed makes opencl preferable.
 
-![rendered tri planar example](/assets/images/2024-10-22-tri-planar-cops/tri_planar_example001.jpg)
+![rendered tri planar example](/assets/images/2024-10-22-tri-planar-cops/tri_planar_example_001.jpg)
 
 A tri planar projection is a set of 3 parallel projections, front, side and top, blended based on their respective facing ratios. Knowing this, the steps of our process will be:
 
-- create texture projections from x, y and z
-- build masks for each projection using facing ratios
-- blend textures using masks
+- calculate blending weights using normals
+- sample textures for each projection plane
+- blend textures using weights
 
 -----
 
 ### initial setup
 
-This tutorial assumes you’re reasonably familiar with cops but I’ll go over a quick bit of set up. Create the following network and link or create your geometry in the sop import, uv’s and normals are required on the geometry. On the wrangle, change the type of the first input to **Geometry**, then add an **RGB** input and name it **origP**.
+This tutorial assumes you’re reasonably familiar with cops but I’ll go over a quick bit of set up. Create the following network and link or create your geometry in the sop import, uv’s and normals are required on the geometry. On the wrangle, change the type of the first input to **Geometry**, then add **RGB** inputs named **origP** and **N**.
 
-![inital setup](/assets/images/2024-10-22-tri-planar-cops/set_up_screenshot001.jpg)
+![inital setup](/assets/images/2024-10-22-tri-planar-cops/wrangle_001.png)
 
 Fill the wrangle with this vex snippet:
 
@@ -28,50 +28,120 @@ Fill the wrangle with this vex snippet:
 vector uv;
 xyzdist(1,v@P,prim,uv);
 
-v@origP = primuv(1,"origP",prim,uv);{% endhighlight %}
+v@origP = primuv(1,"origP",prim,uv);
+v@N = primuv(1,"N",prim,uv);{% endhighlight %}
 
-This process just maps your position data to uv space so we can map 3D elements in cops. Using the xyzdist function does a great job of extrapolating the values at uv boundaries so we don’t have to worry about seams.[^fn-1]
+This process just maps your position and normal data to uv space so we can map 3D elements in cops. Using the xyzdist function does a great job of extrapolating the values at uv boundaries so we don’t have to worry about seams.[^fn-footnote_01]
+
+{% highlight text %}
+[^fn-footnote_01]: Testing footnotes
+{% endhighlight %}
 
 Add an opencl node and in the signature tab set:
 
 - input1 to **origP**, type **RGB**
 - output1 to **Cdout**, type **RGB**
 
-Replace the kernel code with the following to reflect our input output changes:
+Add an opencl node and replace the kernel code with the following:
 
-{% highlight py %}#bind layer !&Cdout
+{% highlight py %}#bind layer !&Cdout float3
 
 #bind layer origP? float3
+#bind layer N? float3
+
 
 @KERNEL
 {
     @Cdout.set(@origP);
 }
+
 {% endhighlight %}
 
-Connect the output of the wrangle and we’re all set to start doing some work.
+Finally there’s a couple of steps to access the data from our wrangle in opencl.
+
+- Select spare parameters button
+- Remove src and dst under the signature tab
+- Connect origP and N from wrangle
 
 -----
 
-### projections
+### blending weights
 
-We need to create projections for the xy, zy and zx planes, let’s start with xy. Getting coordinates for this is really straightforward, we just need to build uv coordinates from the 2 relevant axes. This is done by setting a float2 uv variable to @origP.xy.
+We need to calculate the facing ratio of the surface in relation to x, y and z, then store this as 3 weights. This could be done using a dot product but it’s more efficient to just use the individual components of N, this works as long as N is normalised. For example, dot((float3){1.0f, 0.0f, 0.0f}, N) will produce the same result as N.x.
+The result of this ranges from 1 (facing) to -1 (facing away), the weights need to be in a positive range so a fabs function can be used to get absolute values. Putting this together for x comes the following:
 
-{% highlight py %}@KERNEL
+{% highlight py %}#bind layer !&Cdout float3
+
+#bind layer origP? float3 val=0
+#bind layer N? float3 val=0
+
+float3 N, weight, col;
+
+@KERNEL
 {
-    float4 col = (float4){0.0f, 0.0f, 0.0f, 0.0f};
+    N = normalize(@N);
     
-    float2 uv = @origP.xy;
+    weight.x = fabs(N.x);
     
-    @Cdout.set(col); 
+    //zy plane
+    col = (float3){1.0f, 0.0f, 0.0f} * weight.x;
+    
+    @Cdout.set(col);
 }
+
 {% endhighlight %}
 
-Now we’ve got our uv coordinates, we need to use them to sample a texture. Bind a new layer called tex with the same code as we used to bind origP then click the small icon above the text box to add the relevant inputs.
+We want some way to control the falloff of the blending, one method for this is raising our facing ratio to a power.[^fn-footnote_01] To do this, bind a float parameter named exponent (feel free to give this a more intuitive label).
 
-We use textureSampleRect to sample our input texture and store this to a variable named proj_tex.
-
-{% highlight py %}float3 proj_tex = @tex.textureSampleRect(uv, @dPdxy);
+{% highlight text %}
+[^fn-footnote_02]: Testing footnotes
 {% endhighlight %}
 
-The first parameter of this function is used to input the centre of the sample area, the second refers to the size of the sample area. @dPdxy is a default binding that returns the size of the current output buffer element in image space. We don’t need to worry too much about that, we just need it so our texture is sampled nicely. There’s further information in the SideFx documentation if you’re interested though.[^fn-2]
+`<#bind parm exponent float val=1.0>`
+
+Then raise N.x to the exponent:
+
+`<weight.x = pow(fabs(N.x), @exponent);>`
+
+![blend falloff with exponent](/assets/images/2024-10-22-tri-planar-cops/exponent_001.gif)
+
+The limits to set your exponent parameter at are arbitrary, something like 1 - 100 works fairly well.
+
+<p class="message">
+  I don’t have the strongest maths foundation so found visualising the results of these values with a graphing calculator helpful
+</p>
+
+![exponent graphs](/assets/images/2024-10-22-tri-planar-cops/exponent_graphs_001.png)
+
+We’ll test by blending red, green and blue, using addition assignment to blend the new colors. Bringing in the other weights should look something like this:
+
+{% highlight py %}#bind layer !&Cdout float3
+
+#bind layer origP? float3 val=0
+#bind layer N? float3 val=0
+
+float3 N, weight, col;
+
+@KERNEL
+{
+    N = normalize(@N);
+    
+    weight.x = pow(fabs(N.x), @exponent);
+    weight.y = pow(fabs(N.y), @exponent);
+    weight.z = pow(fabs(N.z), @exponent);
+    
+    //zy plane
+    col = (float3){1.0f, 0.0f, 0.0f} * weight.x;
+    
+    //zx plane
+    col += (float3){0.0f, 1.0f, 0.0f} * weight.y;
+    
+    //xy plane
+    col += (float3){0.0f, 0.0f, 1.0f} * weight.z;
+    
+    @Cdout.set(col);
+}
+
+{% endhighlight %}
+
+![blend weights](/assets/images/2024-10-22-tri-planar-cops/blend_weights_001.PNG)
