@@ -86,7 +86,7 @@ float3 N, weight, col;
 
 We want some way to control the falloff of the blending, one method for this is raising our facing ratio to a power.[^2] To do this, bind a float parameter named exponent (feel free to give this a more intuitive label).
 
-[^fn-footnote_02]: Testing footnotes 2
+[^2]: Testing footnotes 2
 
 {% highlight py %}#bind parm exponent float val=1.0{% endhighlight %}
 
