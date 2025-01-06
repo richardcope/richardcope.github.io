@@ -23,7 +23,6 @@ This tutorial assumes you’re reasonably familiar with cops but I’ll go over 
 
 Fill the wrangle with this vex snippet:
 
-
 {% highlight py %}int prim;
 vector uv;
 xyzdist(1,v@P,prim,uv);
@@ -31,16 +30,9 @@ xyzdist(1,v@P,prim,uv);
 v@origP = primuv(1,"origP",prim,uv);
 v@N = primuv(1,"N",prim,uv);{% endhighlight %}
 
-This process just maps your position and normal data to uv space so we can map 3D elements in cops. Using the xyzdist function does a great job of extrapolating the values at uv boundaries so we don’t have to worry about seams.[^fn-footnote_01]
+This process just maps your position and normal data to uv space so we can map 3D elements in cops. Using the xyzdist function does a great job of extrapolating the values at uv boundaries so we don’t have to worry about seams.[^1]
 
-{% highlight text %}
-[^fn-footnote_01]: Testing footnotes
-{% endhighlight %}
-
-Add an opencl node and in the signature tab set:
-
-- input1 to **origP**, type **RGB**
-- output1 to **Cdout**, type **RGB**
+[^1]: Testing footnotes 1
 
 Add an opencl node and replace the kernel code with the following:
 
@@ -48,7 +40,6 @@ Add an opencl node and replace the kernel code with the following:
 
 #bind layer origP? float3
 #bind layer N? float3
-
 
 @KERNEL
 {
@@ -62,6 +53,8 @@ Finally there’s a couple of steps to access the data from our wrangle in openc
 - Select spare parameters button
 - Remove src and dst under the signature tab
 - Connect origP and N from wrangle
+
+![wrangle to opencl](/assets/images/2024-10-22-tri-planar-cops/opencl_bindings_001.gif)
 
 -----
 
@@ -91,17 +84,15 @@ float3 N, weight, col;
 
 {% endhighlight %}
 
-We want some way to control the falloff of the blending, one method for this is raising our facing ratio to a power.[^fn-footnote_02] To do this, bind a float parameter named exponent (feel free to give this a more intuitive label).
+We want some way to control the falloff of the blending, one method for this is raising our facing ratio to a power.[^2] To do this, bind a float parameter named exponent (feel free to give this a more intuitive label).
 
-{% highlight text %}
-[^fn-footnote_02]: Testing footnotes
-{% endhighlight %}
+[^fn-footnote_02]: Testing footnotes 2
 
-`<#bind parm exponent float val=1.0>`
+{% highlight py %}#bind parm exponent float val=1.0{% endhighlight %}
 
 Then raise N.x to the exponent:
 
-`<weight.x = pow(fabs(N.x), @exponent);>`
+{% highlight py %}weight.x = pow(fabs(N.x), @exponent);{% endhighlight %}
 
 ![blend falloff with exponent](/assets/images/2024-10-22-tri-planar-cops/exponent_001.gif)
 
@@ -109,9 +100,8 @@ The limits to set your exponent parameter at are arbitrary, something like 1 - 1
 
 <p class="message">
   I don’t have the strongest maths foundation so found visualising the results of these values with a graphing calculator helpful
+  ![exponent graphs](/assets/images/2024-10-22-tri-planar-cops/exponent_graphs_001.png)
 </p>
-
-![exponent graphs](/assets/images/2024-10-22-tri-planar-cops/exponent_graphs_001.png)
 
 We’ll test by blending red, green and blue, using addition assignment to blend the new colors. Bringing in the other weights should look something like this:
 
