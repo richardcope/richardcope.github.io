@@ -1,5 +1,5 @@
 # Setup
-title: Richard Cope
+title: richard cope
 tagline:
 url: https://richardcope.github.io/
 paginate: 1
@@ -33,15 +33,21 @@ sass:
 
 # Specify the author for blog posts
 author:
-  name: Richard Cope
+  name: richard cope
   url:
   email:
 
 # Custom vars
-version: 3.0.0
+version: 1.0.0
 
-version: 3.0.0
+version: 1.0.0
 # Navbar page list
 nav:
   - title: tutorials
     url: /tutorials
+
+  - title: notes
+    url: /notes
+
+  - title: projects
+    url: /projects

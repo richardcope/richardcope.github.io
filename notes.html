@@ -1,0 +1,28 @@
+---
+layout: default
+title: notes
+---
+
+<p class="message">
+  this site is still under development, expect more tutorials and projects in the coming months
+</p>
+<hr>
+
+<div class="posts">
+    {% for post in site.categories.notes %}
+    <article class="post">
+  
+      <div class="box">
+        <div class="item">
+          <h1 class="post-title">
+            <a href="{{ post.url | relative_url }}">
+              {{ post.title }}
+            </a>
+          </h1>
+          <time datetime="{{ post.date | date_to_xmlschema }}" class="post-date">{{ post.date | date_to_string }}</time>
+        </div>
+        <img src="{{- post.image | relative_url -}}" alt="" class="blog-roll-image">
+    </article>
+    <hr>
+    {% endfor %}
+  </div>
