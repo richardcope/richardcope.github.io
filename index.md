@@ -10,6 +10,8 @@ richard cope is a vancouver based digital artist, currently working in surfacing
 
 richardcope1995@gmail.com
 
+[bluesky](https://bsky.app/profile/richardcope.bsky.social)
+
 [github](https://github.com/richardcope)
 
 [linkedin](https://www.linkedin.com/in/richard-cope-15b055a5/)

@@ -6,25 +6,33 @@
   padding-top: var(--spacer);
   padding-bottom: var(--spacer);
   margin-bottom: var(--spacer-3);
+
 }
 
 .masthead-title {
+  display: flex;
+  justify-content: space-between;
+
   margin-bottom: 0;
 
   a {
     color: inherit;
     text-decoration: none;
+    padding-right: 15%;
   }
 
   small {
     font-weight: 400;
     opacity: .5;
   }
+
 }
 
 // Navbar styles
 .nav {
-  float: right;
-  line-height: 1.25rem;
+  display: flex;
+  //align-items: right;
+  justify-content: flex-end;
+  //margin: auto;
   word-spacing: 1rem;
 }
