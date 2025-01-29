@@ -18,7 +18,6 @@
   a {
     color: inherit;
     text-decoration: none;
-    padding-right: 15%;
   }
 
   small {
@@ -31,8 +30,16 @@
 // Navbar styles
 .nav {
   display: flex;
-  //align-items: right;
-  justify-content: flex-end;
-  //margin: auto;
-  word-spacing: 1rem;
+  justify-content: space-between;
+  flex-direction: row;
+
+  text-align: right;
+
+  width: 55%;
+}
+
+@media (max-width: 600px){
+  .nav {
+    flex-direction: column;
+  }
 }

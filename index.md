@@ -4,7 +4,7 @@ title: Home
 ---
 ![home featured](/assets/images/home_featured.jpg)
 
-richard cope is a vancouver based digital artist, currently working in surfacing at netflix animation studios.
+Richard Cope is a Vancouver based digital artist, currently working in surfacing at Netflix Animation Studios.
 
 -----
 

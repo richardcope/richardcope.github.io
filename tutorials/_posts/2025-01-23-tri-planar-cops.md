@@ -1,13 +1,13 @@
 ---
 layout: post
 title: building a tri planar projection in cops (opencl)
-image: /assets/images/2024-10-22-tri-planar-cops/tri_planar_example_001.jpg
+image: /assets/images/tri-planar-cops/tri_planar_example_001.jpg
 category: tutorial
 ---
 
 Before diving in I just want to mention that this tutorial is a little more on the technical side and mainly serves as an introduction for how to build a tool using opencl within the context of cops. You can do a lot in cops without writing a single line of code, but it does definitely open some doors!
 
-Tri planar projections are a useful technique for projecting textures without visible seams. Since there’s no native tri planar in cops 2.0 (as of houdini 20.5), we have a good excuse to build our own. This could be done using vex or a large network of native cops nodes, however processing speed makes opencl preferable.
+Tri planar projections are a useful technique for projecting textures without visible seams. Since there’s no native tri planar in Copernicus (as of houdini 20.5), we have a good excuse to build our own. This could be done using vex or a large network of native cops nodes, however processing speed makes opencl preferable.
  
 A tri planar projection is a set of 3 parallel projections, **xy**, **zy** and **zx**, blended based on their respective facing ratios. Knowing this, the steps of our process will be:
 
@@ -15,7 +15,7 @@ A tri planar projection is a set of 3 parallel projections, **xy**, **zy** and *
 - sample textures for each projection plane
 - blend textures using weights
 
-![triplanar illustration](/assets/images/2024-10-22-tri-planar-cops/triplanar_illustration_001.png)
+![triplanar illustration](/assets/images/tri-planar-cops/triplanar_illustration_001.png)
 
 -----
 
@@ -26,7 +26,7 @@ First, a quick bit of set up. Create the following network and link or create yo
 - On the Rasterize Setup, set space to **UVs**
 - On the wrangle, change the type of the first input to **Geometry**, then add **RGB** inputs named **origP** and **N**
 
-![inital setup](/assets/images/2024-10-22-tri-planar-cops/wrangle_001.png)
+![inital setup](/assets/images/tri-planar-cops/wrangle_001.png)
 
 Fill the wrangle with this vex snippet:
 
@@ -61,7 +61,7 @@ Finally there’s a couple of steps to access the data from our wrangle in openc
 - Remove **src** and **dst** under the signature tab
 - Connect **origP** and **N** from wrangle
 
-![wrangle to opencl](/assets/images/2024-10-22-tri-planar-cops/opencl_bindings_001.gif)
+![wrangle to opencl](/assets/images/tri-planar-cops/opencl_bindings_001.gif)
 
 -----
 
@@ -97,14 +97,14 @@ Then raise **N.x** to the exponent:
 
 {% highlight py %}weight.x = pow(fabs(N.x), @exponent);{% endhighlight %}
 
-![blend falloff with exponent](/assets/images/2024-10-22-tri-planar-cops/exponent_001.gif)
+![blend falloff with exponent](/assets/images/tri-planar-cops/exponent_001.gif)
 
 The limits to set your exponent parameter at are arbitrary, something like 1 - 100 works fairly well.
 
 <p class="message">
   Plotting with a graphing calculator aided my own understanding of the connection between these values and the visual result
 </p>
-![exponent graphs](/assets/images/2024-10-22-tri-planar-cops/exponent_graphs_001.png)
+![exponent graphs](/assets/images/tri-planar-cops/exponent_graphs_001.png)
 
 Now we can add the weights for **y** and **z**, visualing the output of weight directly works well for debugging at this stage.
 
@@ -120,7 +120,7 @@ Now we can add the weights for **y** and **z**, visualing the output of weight d
 }
 {% endhighlight %}
 
-![blend weights](/assets/images/2024-10-22-tri-planar-cops/blend_weights_001.PNG)
+![blend weights](/assets/images/tri-planar-cops/blend_weights_001.PNG)
 
 The weights need to sum to 1 so the current set up only works for an exponent of 2. Squaring works because calculating the sum of the squared components is the same as performing a dot product with itself, and the dot product of a unit vector with itself is always 1.
 
@@ -128,7 +128,7 @@ To make the blend work for exponents other than 2, we divide **weight** by the s
 
 {% highlight py %}weight /= weight.x + weight.y + weight.z;{% endhighlight %}
 
-![blend weights](/assets/images/2024-10-22-tri-planar-cops/blend_weights_001.gif)
+![blend weights](/assets/images/tri-planar-cops/blend_weights_001.gif)
 
 Putting all this together should give nice control over the blending.
 
@@ -163,7 +163,7 @@ uv = @origP.xy;
 col += @textureXY.textureSampleRect(uv, @dPdxy.texture) * weight.z;
 {% endhighlight %}
 
-![blend weights](/assets/images/2024-10-22-tri-planar-cops/projected_textures_001.png)
+![blend weights](/assets/images/tri-planar-cops/projected_textures_001.png)
 
 That’s pretty much it for the opencl side of things, here’s the complete code:
 
@@ -213,7 +213,7 @@ float3 col, N, weight;
 
 Using vector transforms on **origP** and **N** will allow you to transform the projection. Just make sure the rotations are linked.
 
-![blend weights](/assets/images/2024-10-22-tri-planar-cops/transforms_001.png)
+![blend weights](/assets/images/tri-planar-cops/transforms_001.png)
 
 -----
 
@@ -221,8 +221,8 @@ Using vector transforms on **origP** and **N** will allow you to transform the p
 
 Overlaying a 0 centred **RGB** noise over **N** provides a nice breakup on the blend. Similar techniques were used for the feature image for this tutorial.
 
-![blend weights](/assets/images/2024-10-22-tri-planar-cops/blend_breakup_001.png)
-![blend weights](/assets/images/2024-10-22-tri-planar-cops/blending_breakup_001.gif)
+![blend weights](/assets/images/tri-planar-cops/blend_breakup_001.png)
+![blend weights](/assets/images/tri-planar-cops/blending_breakup_001.gif)
 
 -----
 
